@@ -26,17 +26,17 @@ def main() -> None:
         "--batch-size",
         "1",
         "--iters",
-        "1200",
+        "800",
         "--learning-rate",
         "1e-5",
         "--adapter-path",
         ADAPTER,
         "--max-seq-length",
-        "1024",
+        "2048",
     ]
     print(" ".join(cmd))
     subprocess.check_call(cmd)
-    print("saved", ADAPTER, "student", STUDENT)
+    print("saved", ADAPTER)
 
 
 if __name__ == "__main__":

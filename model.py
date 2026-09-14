@@ -1,3 +1,3 @@
-STUDENT = "mlx-community/gemma-3-1b-it-8bit"
-# 16GB+: "mlx-community/gemma-3-1b-it-bf16"
-SYSTEM = "Solve the math problem. Show steps. Put the final answer on its own line as #### <number>."
+# Portable student: Microsoft Phi-4-mini-reasoning (3.8B, MIT).
+STUDENT = "mlx-community/Phi-4-mini-reasoning-4bit"
+SYSTEM = "Solve the math problem step by step. End with #### <number>."

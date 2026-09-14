@@ -10,34 +10,27 @@ from mlx_lm import generate, load
 from model import STUDENT, SYSTEM
 
 STRICT = re.compile(r"####\s*(-?[0-9][0-9,]*(?:\.[0-9]+)?)")
+BOXED = re.compile(r"\\boxed\{([^}]+)\}")
 LOOSE = re.compile(r"-?[0-9][0-9,]*(?:\.[0-9]+)?")
 
 
-def strict_num(text: str) -> str:
-    found = STRICT.findall(text.replace(",", ""))
-    return found[-1] if found else ""
-
-
-def loose_num(text: str) -> str:
-    s = strict_num(text)
+def nums(text: str) -> str:
+    t = text.replace(",", "")
+    s = STRICT.findall(t)
     if s:
-        return s
-    found = LOOSE.findall(text.replace(",", ""))
-    return found[-1] if found else ""
+        return s[-1]
+    b = BOXED.findall(text)
+    if b:
+        m = LOOSE.findall(b[-1].replace(",", ""))
+        if m:
+            return m[-1]
+    m = LOOSE.findall(t)
+    return m[-1] if m else ""
 
 
 def gold_num(answer: str) -> str:
-    return strict_num(answer) or loose_num(answer)
-
-
-def shots(train, k: int) -> list[dict]:
-    out = []
-    for i, ex in enumerate(train):
-        if i >= k:
-            break
-        out.append({"role": "user", "content": SYSTEM + "\n\n" + ex["question"]})
-        out.append({"role": "assistant", "content": ex["answer"]})
-    return out
+    s = STRICT.findall(answer.replace(",", ""))
+    return s[-1] if s else nums(answer)
 
 
 def main() -> None:
@@ -45,44 +38,34 @@ def main() -> None:
     p.add_argument("--adapter", default="")
     p.add_argument("--sample", type=int, default=200, help="0 = full 1319")
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--shots", type=int, default=4)
     p.add_argument("--show", type=int, default=2)
     args = p.parse_args()
 
     adapter = args.adapter or None
     model, tok = load(STUDENT, adapter_path=adapter)
-    raw = load_dataset("openai/gsm8k", "main")
-    prefix = shots(raw["train"], args.shots)
-    test = raw["test"]
+    test = load_dataset("openai/gsm8k", "main", split="test")
     if args.sample and args.sample < len(test):
         test = test.shuffle(seed=args.seed).select(range(args.sample))
 
-    ok_s = ok_l = 0
+    ok = 0
     n = len(test)
-    print(f"Astras GSM8K n={n} shots={args.shots} {STUDENT} adapter={adapter or 'base'}")
+    print(f"Astras GSM8K n={n} {STUDENT} adapter={adapter or 'base'}")
     for i, ex in enumerate(test):
         messages = [
-            *prefix,
-            {"role": "user", "content": SYSTEM + "\n\n" + ex["question"]},
+            {"role": "system", "content": SYSTEM},
+            {"role": "user", "content": ex["question"]},
         ]
         prompt = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        text = generate(model, tok, prompt=prompt, max_tokens=320, verbose=False)
-        gold = gold_num(ex["answer"])
-        s, l = strict_num(text), loose_num(text)
-        ok_s += int(s == gold and gold != "")
-        ok_l += int(l == gold and gold != "")
+        text = generate(model, tok, prompt=prompt, max_tokens=1024, verbose=False)
+        pred, gold = nums(text), gold_num(ex["answer"])
+        ok += int(pred == gold and gold != "")
         if i < args.show:
             print("--- sample", i)
-            print(text[-500:])
-            print("pred_strict", s, "pred_flex", l, "gold", gold)
+            print(text[-600:])
+            print("pred", pred, "gold", gold)
         if (i + 1) % 10 == 0 or i + 1 == n:
-            print(
-                f"{i + 1}/{n}  strict {100 * ok_s / (i + 1):.1f}%  flex {100 * ok_l / (i + 1):.1f}%"
-            )
-    print(
-        f"GSM8K strict ####: {ok_s}/{n} = {100 * ok_s / n:.2f}%  "
-        f"flexible: {ok_l}/{n} = {100 * ok_l / n:.2f}%  model={STUDENT}"
-    )
+            print(f"{i + 1}/{n}  {100 * ok / (i + 1):.1f}%")
+    print(f"GSM8K: {ok}/{n} = {100 * ok / n:.2f}%  {STUDENT}")
 
 
 if __name__ == "__main__":
