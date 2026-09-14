@@ -7,7 +7,7 @@ import re
 from datasets import load_dataset
 from mlx_lm import generate, load
 
-from model import MODEL, SYSTEM
+from model import STUDENT, SYSTEM
 
 STRICT = re.compile(r"####\s*(-?[0-9][0-9,]*(?:\.[0-9]+)?)")
 LOOSE = re.compile(r"-?[0-9][0-9,]*(?:\.[0-9]+)?")
@@ -50,7 +50,7 @@ def main() -> None:
     args = p.parse_args()
 
     adapter = args.adapter or None
-    model, tok = load(MODEL, adapter_path=adapter)
+    model, tok = load(STUDENT, adapter_path=adapter)
     raw = load_dataset("openai/gsm8k", "main")
     prefix = shots(raw["train"], args.shots)
     test = raw["test"]
@@ -59,7 +59,7 @@ def main() -> None:
 
     ok_s = ok_l = 0
     n = len(test)
-    print(f"Astras GSM8K n={n} shots={args.shots} {MODEL} adapter={adapter or 'base'}")
+    print(f"Astras GSM8K n={n} shots={args.shots} {STUDENT} adapter={adapter or 'base'}")
     for i, ex in enumerate(test):
         messages = [
             *prefix,
@@ -81,7 +81,7 @@ def main() -> None:
             )
     print(
         f"GSM8K strict ####: {ok_s}/{n} = {100 * ok_s / n:.2f}%  "
-        f"flexible: {ok_l}/{n} = {100 * ok_l / n:.2f}%  model={MODEL}"
+        f"flexible: {ok_l}/{n} = {100 * ok_l / n:.2f}%  model={STUDENT}"
     )
 
 

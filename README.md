@@ -1,11 +1,22 @@
 # Astras
 
-Open-source small reasoner. Base: **Llama 3.2 3B Instruct** (Meta), Apple MLX.
+Lightweight student: **Gemma 3 1B** (~1.4 GB 8-bit MLX).
+Math data: NVIDIA **OpenMathInstruct-2** GSM8K slice (**CC-BY-4.0**).
+
+Not a live distill of OpenMath2-8B (that is Llama 3.1; the name would have to start with Llama).
+
+Read [LICENSES.md](LICENSES.md).
 
 ```bash
+git pull
 uv sync
-uv run ruff check .
-uv run python eval_gsm8k.py --sample 200 --seed 0
+uv run python prepare_openmath.py
+uv run python train_sft.py
+uv run python eval_gsm8k.py --sample 200 --adapter outputs/sft
 ```
 
-4-bit MLX is ~1.8 GB on disk. First HF download may ask you to accept the Llama 3.2 license at huggingface.co/meta-llama/Llama-3.2-3B-Instruct.
+Baseline before train:
+
+```bash
+uv run python eval_gsm8k.py --sample 200 --seed 0
+```

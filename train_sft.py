@@ -5,8 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from model import MODEL
-from prepare_gsm8k import main as prepare
+from model import STUDENT
+from prepare_openmath import main as prepare
 
 ADAPTER = "outputs/sft"
 
@@ -19,14 +19,14 @@ def main() -> None:
         "-m",
         "mlx_lm.lora",
         "--model",
-        MODEL,
+        STUDENT,
         "--data",
         "data/gsm8k",
         "--train",
         "--batch-size",
         "1",
         "--iters",
-        "800",
+        "1200",
         "--learning-rate",
         "1e-5",
         "--adapter-path",
@@ -36,7 +36,7 @@ def main() -> None:
     ]
     print(" ".join(cmd))
     subprocess.check_call(cmd)
-    print("saved", ADAPTER)
+    print("saved", ADAPTER, "student", STUDENT)
 
 
 if __name__ == "__main__":
