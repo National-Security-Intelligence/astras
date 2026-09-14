@@ -1,10 +1,12 @@
 # Licenses
 
-| Piece | License |
-|---|---|
-| Astras scripts | Apache-2.0 |
-| Student weights | MIT (Phi-4-mini-reasoning, Microsoft) |
-| Optional SFT data | CC-BY-4.0 (OpenMathInstruct-2) |
-| Eval | openai/gsm8k (MIT) |
+Scripts in this git tree: **Apache-2.0** (see LICENSE). No third-party weights are stored here.
 
-This stack is the one that is actually open-source **weights** + portable + US origin.
+| Dependency (downloaded at runtime) | License |
+|---|---|
+| Phi-4-mini-reasoning | MIT (Microsoft) |
+| OpenMathInstruct-2 | CC-BY-4.0 (NVIDIA) — attribute |
+| GSM8K | MIT (OpenAI) |
+| mlx / mlx-lm | MIT |
+
+Gemma Terms and Llama Community licenses are **not** used in the current student.
